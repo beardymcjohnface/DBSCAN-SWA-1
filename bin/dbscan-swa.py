@@ -383,28 +383,28 @@ def GetFaaSequenc(fileName,saveFaaPath,prefix,add_genome_id='no'):   #parse spec
 	savefile_protein.close()
 
 def diamond_blastp(file,outfile,database,format,evalue):
-	num_threads = 20
+	num_threads = args.thread_num
 	diamond_path = os.path.join(root_path,'software','diamond','diamond') 
 	script = diamond_path+" blastp -d "+database+" -q "+file+" -f "+str(format)+" -e "+str(evalue)+" -o "+outfile+" -p "+str(num_threads)+" --max-target-seqs 1"
 	print(script)
 	os.system(script)
 
 def blastp(file,outfile,database,format,evalue):
-	num_threads = 20
+	num_threads = args.thread_num
 	blastp_path = os.path.join(root_path,'software','blast+','blastp') 
 	script = blastp_path+" -db "+database+" -query "+file+" -outfmt "+str(format)+" -evalue "+str(evalue)+" -out "+outfile+" -num_threads "+str(num_threads)+" -max_target_seqs 1"
 
 	os.system(script)
 
 def blastn(file,outfile,database,format,evalue):
-	num_threads = 20
+	num_threads = args.thread_num
 	format = 0
 	blastn_path = os.path.join(root_path,'software','blast+','blastn')
 	script = blastn_path+" -db "+database+" -query "+file+" -outfmt "+str(format)+" -evalue "+str(evalue)+" -out "+outfile+" -num_threads "+str(num_threads)+" -num_alignments 1 -word_size 11"
 	os.system(script)
 
 def blastn_file(file,outfile,subject_file,format,evalue):
-	num_threads = 20
+	num_threads = args.thread_num
 	format = 0
 	blastn_path = os.path.join(root_path,'software','blast+','blastn')
 	script = blastn_path+" -subject "+subject_file+" -query "+file+" -outfmt "+str(format)+" -evalue "+str(evalue)+" -out "+outfile+" -word_size 11"
@@ -412,7 +412,7 @@ def blastn_file(file,outfile,subject_file,format,evalue):
 	os.system(script)
 
 def blastp_file(file,outfile,subject_file,format,evalue):
-	num_threads = 20
+	num_threads = args.thread_num
 	blastp_path = os.path.join(root_path,'software','blast+','blastp')
 	script = "blastp -subject "+subject_file+" -query "+file+" -outfmt "+str(format)+" -evalue "+str(evalue)+" -out "+outfile+" -max_target_seqs 1"
 	os.system(script)
@@ -1377,7 +1377,8 @@ def predict_prophage_dbscan_swa(strain_id,bac_fna_file,bac_faa_file,dbscan_regio
 	contents = dbscan_contents+swa_contents[1:]
 	if len(contents)==1:
 		print('0 prophage region was detected in the query bacterial genome!')
-		sys.exit(1)
+		open(save_prophage_summary_file, 'w').close()
+		sys.exit(0)
 	bac_protein_def_dict = get_protein_def(bac_protein_def_file)
 	uniprot_proteins_species = get_uniprot_def("")
 	with open(bac_fna_file) as f:
@@ -1531,7 +1532,7 @@ def bac_blastn_phage(prophage_file,phage_file,outfile):
 	os.system(command)
 
 def diamond_blastp_nomax(file,outfile,database):
-	num_threads = 20
+	num_threads = args.thread_num
 	format = 6
 	evalue = 1
 	identity = 0.4
@@ -1541,13 +1542,13 @@ def diamond_blastp_nomax(file,outfile,database):
 	os.system(script)
 
 def bac_blastp_phagedb(prophage_file,outfile):
-	num_threads = 20
+	num_threads = args.thread_num
 	format = 6
 	database = os.path.join(root_path,'db','database','phage_protein_db')
 	diamond_blastp_nomax(prophage_file,outfile,database)
 
 def bac_blastp_phage(prophage_file,phage_file,outfile):
-	num_threads = 20
+	num_threads = args.thread_num
 	evalue = 0.01
 	format = 6
 	blastp_path = os.path.join(root_path,'software','blast+','blastp')
@@ -2681,7 +2682,7 @@ if __name__=='__main__':
 	parser.add_argument('--cov', help='optional,blastn coverage cutoff when anotating .\n')
 	parser.add_argument('--protein_number', help='optional,the protein number of expanding when finding prophage boundaries .\n')
 	parser.add_argument('--min_protein_num', help='optional,the protein number of expanding when finding prophage boundaries .\n')
-	parser.add_argument('--thread_num', help='optional,the number of threads for multiple contigs.\n')
+	parser.add_argument('--thread_num', default=10, help='optional,the number of threads for multiple contigs.\n')
 	
 	parser.add_argument('--h',help='''print help information''')
 	args = parser.parse_args()
@@ -2740,11 +2741,12 @@ if __name__=='__main__':
 		cov = args.cov
 	else:
 		cov = 30
-	thread_num <- 10
-	if args.thread_num:
-		thread_num = args.thread_num
-	else:
-		thread_num = 10
+	# set default for args.thread_num so it's always defined
+	# thread_num <- 10
+	# if args.thread_num:
+	# 	thread_num = args.thread_num
+	# else:
+	# 	thread_num = 10
 	
 	global att_pro_num
 	if args.protein_number:
@@ -2820,7 +2822,7 @@ if __name__=='__main__':
 			t.start()
 			#time.sleep(1)
 			while True:
-				if (len(threading.enumerate()) <= int(thread_num)):
+				if (len(threading.enumerate()) <= int(args.thread_num)):
 					break
 		for t in tsk:
 			t.join()
