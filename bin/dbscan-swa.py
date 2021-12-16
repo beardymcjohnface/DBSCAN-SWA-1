@@ -1377,7 +1377,7 @@ def predict_prophage_dbscan_swa(strain_id,bac_fna_file,bac_faa_file,dbscan_regio
 	contents = dbscan_contents+swa_contents[1:]
 	if len(contents)==1:
 		print('0 prophage region was detected in the query bacterial genome!')
-		open(save_prophage_summary_file, 'w').close()
+		open(os.path.join(outdir,prefix+'_DBSCAN-SWA_prophage_summary.txt'), 'w').close()
 		sys.exit(0)
 	bac_protein_def_dict = get_protein_def(bac_protein_def_file)
 	uniprot_proteins_species = get_uniprot_def("")
